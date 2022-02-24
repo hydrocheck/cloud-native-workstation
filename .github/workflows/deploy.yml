@@ -1,9 +1,6 @@
 name: deploy
 
 on:
-  push:
-    branches:
-      - master
   workflow_dispatch:
 
 jobs:
@@ -22,38 +19,14 @@ jobs:
         service_account_key: ${{ secrets.GCP_SA_KEY }}
         export_default_credentials: true
 
-    - name: Install terraform cli
-      uses: hashicorp/setup-terraform@v1
-      with:
-        terraform_version: 1.1.2
-
-    - name: Provision a GKE cluster
-      working-directory: ./provision/gke/
-      run: |
-        terraform init
-        terraform apply -auto-approve -var gke_cluster_name=cloud-native-workstation-$GITHUB_RUN_NUMBER
-
     - name: Install helm
       run: |
-        gcloud container clusters get-credentials cloud-native-workstation-$GITHUB_RUN_NUMBER --zone us-central1-a
+        gcloud container clusters get-credentials core-qa --zone us-central1-a
         alias helm="docker run -ti --rm -v $(pwd):/apps -v ~/.kube:/root/.kube -v ~/.helm:/root/.helm alpine/helm:3.5.4"
 
-    - name: Install workstation prerequisites
-      working-directory: ./prepare/chart/
+    - name: Setup namespace
       run: |
-        helm dep update
-        helm install workstation-prerequisites . \
-            --namespace kube-system \
-            --wait
-
-    - name: Install OPA CRDs
-      run: |
-        kubectl apply -f prepare/crds/constraint-templates.yaml --wait
-
-    - name: Setup namespaces
-      run: |
-        kubectl create namespace workstation-one
-        kubectl create namespace workstation-two
+        kubectl create namespace workstation-$GITHUB_RUN_NUMBER
 
     - name: Update Helm dependencies
       working-directory: ./deploy/
@@ -64,69 +37,29 @@ jobs:
       working-directory: ./deploy/
       run: |
         helm install workstation . \
-            --namespace workstation-one \
-            --set domain=a.example.com \
-            --set certbot.enabled=false \
+            --namespace workstation-$GITHUB_RUN_NUMBER \
+            --set domain=$GITHUB_RUN_NUMBER.${{ secrets.ROOT_URL }} \
+            --set certbot.enabled=true \
             --set oauth2Proxy.enabled=false \
-            --set pgweb.enabled=true \
-            --set sftp.enabled=true \
+            --set pgweb.enabled=false \
+            --set sftp.enabled=false \
             --set selenium.enabled=true \
             --set selenium.chrome.enabled=true \
             --set selenium.firefox.enabled=true \
             --set selenium.edge.enabled=true \
-            --set jupyter.enabled=true \
+            --set jupyter.enabled=false \
             --set landing.enabled=true \
-            --set sonarqube.enabled=true \
-            --set guacamole.enabled=true \
-            --set kanboard.enabled=true \
-            --set prometheus.enabled=true \
-            --set grafana.enabled=true \
+            --set sonarqube.enabled=false \
+            --set guacamole.enabled=false \
+            --set kanboard.enabled=false \
+            --set prometheus.enabled=false \
+            --set grafana.enabled=false \
             --timeout 10m0s \
             --wait
 
-    - name: Deploy another workstation
-      working-directory: ./deploy/
+    - name: Create DNS records
       run: |
-        helm install workstation . \
-            --namespace workstation-two \
-            --set domain=b.example.com \
-            --set certbot.enabled=false \
-            --set oauth2Proxy.enabled=false \
-            --set pgweb.enabled=true \
-            --set sftp.enabled=true \
-            --set selenium.enabled=true \
-            --set selenium.chrome.enabled=true \
-            --set selenium.firefox.enabled=true \
-            --set selenium.edge.enabled=true \
-            --set jupyter.enabled=true \
-            --set landing.enabled=true \
-            --set sonarqube.enabled=true \
-            --set guacamole.enabled=true \
-            --set kanboard.enabled=true \
-            --set prometheus.enabled=true \
-            --set grafana.enabled=true \
-            --timeout 10m0s \
-            --wait
-
-    - name: Undeploy the first workstation
-      run: |
-        helm uninstall workstation \
-            --namespace workstation-one \
-            --wait
-
-    - name: Undeploy the second workstation
-      run: |
-        helm uninstall workstation \
-            --namespace workstation-two \
-            --wait
-
-    - name: Undeploy the workstation prerequisites
-      run: |
-        helm uninstall workstation-prerequisites \
-            --namespace kube-system \
-            --wait
-
-    - name: Deprovision
-      working-directory: ./provision/gke/
-      run: |
-        terraform destroy -auto-approve
+        IP=$(kubectl get ingress main -o json --namespace workstation-$GITHUB_RUN_NUMBER | jq .status.loadBalancer.ingress[0].ip | sed 's/"//g') || exit $?
+        gcloud dns --project=${{ secrets.GCP_PROJECT_ID }} record-sets transaction start --zone=${{ secrets.DNS_ZONE }}
+        gcloud dns --project=${{ secrets.GCP_PROJECT_ID }} record-sets transaction add $IP --name="*.$GITHUB_RUN_NUMBER.${{ secrets.ROOT_URL }}" --ttl=300 --type=A --zone=${{ secrets.DNS_ZONE }}
+        gcloud dns --project=${{ secrets.GCP_PROJECT_ID }} record-sets transaction execute --zone=${{ secrets.DNS_ZONE }}

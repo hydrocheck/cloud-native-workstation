@@ -50,6 +50,24 @@ spec:
       {{ toYaml .Values.podDefaults | nindent 6 }}
       securityContext:
         fsGroup: 1000
+      initContainers:
+      - image: {{ .Values.code.image }}
+        name: code
+        env:
+        - name: PASSWORD
+          value: "{{ .Values.authentication.password }}"
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+            git clone https://github.com/CUAHSI/QA-AutomationEngine /home/coder/QA-AutomationEngine || echo $?
+        resources: {{ toYaml .Values.code.resources | nindent 10 }}
+        volumeMounts:
+        - name: coder
+          mountPath: /home/coder
+          subPath: home/coder
+        - name: coder-profile
+          mountPath: /home/coder/.profile
+          subPath: .profile
       containers:
       - image: {{ .Values.code.image }}
         name: code
