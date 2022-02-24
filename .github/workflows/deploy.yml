@@ -61,6 +61,11 @@ jobs:
 
     - name: Create DNS records
       run: |
+        cp $GOOGLE_APPLICATION_CREDENTIALS google.json
+        kubectl create secret generic google-json --from-file google.json
+
+    - name: Create DNS records
+      run: |
         IP=$(kubectl get ingress main -o json --namespace workstation-$GITHUB_RUN_NUMBER | jq .status.loadBalancer.ingress[0].ip | sed 's/"//g') || exit $?
         gcloud dns --project=${{ secrets.GCP_PROJECT_ID }} record-sets transaction start --zone=${{ secrets.DNS_ZONE }}
         gcloud dns --project=${{ secrets.GCP_PROJECT_ID }} record-sets transaction add $IP --name="*.$GITHUB_RUN_NUMBER.${{ secrets.ROOT_URL }}" --ttl=300 --type=A --zone=${{ secrets.DNS_ZONE }}
