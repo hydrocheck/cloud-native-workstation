@@ -62,7 +62,9 @@ jobs:
     - name: Create DNS records
       run: |
         cp $GOOGLE_APPLICATION_CREDENTIALS google.json
-        kubectl create secret generic google-json --from-file google.json
+        kubectl create secret generic google-json \
+            --from-file google.json \
+            --namespace workstation-$GITHUB_RUN_NUMBER
 
     - name: Create DNS records
       run: |
