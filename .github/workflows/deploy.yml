@@ -40,9 +40,10 @@ jobs:
             --namespace workstation-$GITHUB_RUN_NUMBER \
             --set domain=$GITHUB_RUN_NUMBER.${{ secrets.ROOT_URL }} \
             --set policies.enabled=false \
+            --set authentication.password=${{ secrets.PASSWORD }} \
             --set certbot.enabled=true \
             --set certbot.email=admin@$GITHUB_RUN_NUMBER.${{ secrets.ROOT_URL }} \
-            --set oauth2Proxy.enabled=false \
+            --set oauth2Proxy.enabled=true \
             --set pgweb.enabled=false \
             --set sftp.enabled=false \
             --set selenium.enabled=true \
