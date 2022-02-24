@@ -60,7 +60,7 @@ jobs:
             --timeout 10m0s \
             --wait
 
-    - name: Create DNS records
+    - name: Create DNS credentials
       run: |
         cp $GOOGLE_APPLICATION_CREDENTIALS google.json
         kubectl create secret generic google-json \
