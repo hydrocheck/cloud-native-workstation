@@ -52,7 +52,7 @@ spec:
         fsGroup: 1000
       initContainers:
       - image: {{ .Values.code.image }}
-        name: code
+        name: clone-qa-repo
         env:
         - name: PASSWORD
           value: "{{ .Values.authentication.password }}"
