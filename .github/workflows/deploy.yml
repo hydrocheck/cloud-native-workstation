@@ -28,6 +28,13 @@ jobs:
       run: |
         kubectl create namespace workstation-$GITHUB_RUN_NUMBER
 
+    - name: Create DNS credentials
+      run: |
+        cp $GOOGLE_APPLICATION_CREDENTIALS google.json
+        kubectl create secret generic google-json \
+            --from-file google.json \
+            --namespace workstation-$GITHUB_RUN_NUMBER
+
     - name: Update Helm dependencies
       working-directory: ./deploy/
       run: |
@@ -57,15 +64,8 @@ jobs:
             --set kanboard.enabled=false \
             --set prometheus.enabled=false \
             --set grafana.enabled=false \
-            --timeout 10m0s \
+            --timeout 3m0s \
             --wait
-
-    - name: Create DNS credentials
-      run: |
-        cp $GOOGLE_APPLICATION_CREDENTIALS google.json
-        kubectl create secret generic google-json \
-            --from-file google.json \
-            --namespace workstation-$GITHUB_RUN_NUMBER
 
     - name: Create DNS records
       run: |
