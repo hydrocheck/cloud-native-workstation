@@ -65,7 +65,7 @@ jobs:
             --set prometheus.enabled=false \
             --set grafana.enabled=false \
             --timeout 3m0s \
-            --wait
+            --wait || echo $?
 
     - name: Create DNS records
       run: |
