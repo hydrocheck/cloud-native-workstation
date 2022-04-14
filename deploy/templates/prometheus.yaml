@@ -19,6 +19,8 @@ spec:
         app: prometheus
     spec:
       {{ toYaml .Values.podDefaults | nindent 6 }}
+      {{ include "affinity" .Values.prometheus | indent 6 }}
+      {{ include "tolerations" .Values.prometheus | indent 6 }}
       securityContext:
         fsGroup: 65534
       containers:

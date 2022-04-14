@@ -40,6 +40,11 @@ RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
     rm -rf /var/lib/apt/lists/* && \
     usermod -aG docker coder
 
+# install mongodb tools
+RUN wget https://fastdl.mongodb.org/tools/db/mongodb-database-tools-debian10-x86_64-100.5.2.tgz && \
+    tar xzf mongodb-database-tools-debian10-x86_64-100.5.2.tgz && \
+    install mongodb-database-tools-debian10-x86_64-100.5.2/bin/* /usr/local/bin/
+
 # install conftest
 RUN wget https://github.com/open-policy-agent/conftest/releases/download/v0.28.3/conftest_0.28.3_Linux_x86_64.tar.gz && \
     tar xzf conftest_0.28.3_Linux_x86_64.tar.gz && \
@@ -56,7 +61,9 @@ RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.d
 RUN echo "deb http://packages.cloud.google.com/apt cloud-sdk-$(lsb_release -c -s) main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
     apt-get update -qqy && \
-    apt-get install -qqy --no-install-recommends google-cloud-sdk && \
+    apt-get install -qqy --no-install-recommends \
+        google-cloud-sdk \
+        google-cloud-sdk-kpt && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -75,6 +82,10 @@ RUN curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/sk
 RUN wget https://get.helm.sh/helm-v3.7.1-linux-amd64.tar.gz && \
     tar xfvz helm-v3.7.1-linux-amd64.tar.gz linux-amd64/helm && \
     install linux-amd64/helm /usr/local/bin/
+
+# install istioctl
+RUN curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.13.2 sh - && \
+    install istio-1.13.2/bin/istioctl /usr/local/bin/
 
 # install hugo extended
 RUN curl -s https://api.github.com/repos/gohugoio/hugo/releases/latest | \
@@ -128,6 +139,7 @@ RUN apt-get update -qqy && \
         openjdk-11-jdk \
         openvpn \
         ruby-dev \
+        siege \
         texlive-latex-base \
         texlive-xetex && \
     apt-get clean && \
