@@ -40,6 +40,8 @@ spec:
         app: selenium-hub
     spec:
       {{ toYaml .Values.podDefaults | nindent 6 }}
+      {{ include "affinity" .Values.selenium.hub | indent 6 }}
+      {{ include "tolerations" .Values.selenium.hub | indent 6 }}
       containers:
       - name: selenium-hub
         image: {{ .Values.selenium.hub.image }}
@@ -109,6 +111,8 @@ spec:
         app: selenium-chrome
     spec:
       {{ toYaml .Values.podDefaults | nindent 6 }}
+      {{ include "affinity" .Values.selenium.chrome | indent 6 }}
+      {{ include "tolerations" .Values.selenium.chrome | indent 6 }}
       containers:
       - name: selenium-chrome
         image: {{ .Values.selenium.chrome.image }}
@@ -188,6 +192,8 @@ spec:
         app: selenium-firefox
     spec:
       {{ toYaml .Values.podDefaults | nindent 6 }}
+      {{ include "affinity" .Values.selenium.firefox | indent 6 }}
+      {{ include "tolerations" .Values.selenium.firefox | indent 6 }}
       containers:
       - name: selenium-firefox
         image: {{ .Values.selenium.firefox.image }}
@@ -267,6 +273,8 @@ spec:
         app: selenium-edge
     spec:
       {{ toYaml .Values.podDefaults | nindent 6 }}
+      {{ include "affinity" .Values.selenium.edge | indent 6 }}
+      {{ include "tolerations" .Values.selenium.edge | indent 6 }}
       containers:
       - name: selenium-edge
         image: {{ .Values.selenium.edge.image }}

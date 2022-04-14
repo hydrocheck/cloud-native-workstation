@@ -57,15 +57,19 @@ My own use and testing is with Google Kubernetes Engine, but folks should find t
     - [Bring your own SSL certificate](#bring-your-own-ssl-certificate)
 - [Build (Optional)](#build-optional)
 - [Configuration](#configuration)
-    - [Docker Registry](#docker-registry)
     - [Domain](#domain)
     - [Certbot](#certbot)
     - [Resource requests](#resource-requests)
+    - [GPU capabilities](#gpu-capabilities)
+    - [VM types](#vm-types)
 - [Installation](#installation)
     - [Workstation prerequisites installation](#workstation-prerequisites-installation)
     - [CRDs installation](#crds-installation)
     - [Workstation installation](#workstation-installation)
 - [Usage](#usage)
+- [Deprovisioning](#deprovisioning)
+    - [Helm uninstall](#helm-uninstall)
+    - [Terraform destory](#terraform-destroy)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -108,7 +112,7 @@ If you would like to provision a new Kubernetes cluster on Google Kubernetes Eng
         Or, with a custom zone or custom cluster name:
         ```
         terraform init
-        terraform apply -var gcp_zone=YOUR_REGION -var gke_cluster_name=YOUR_CLUSTER_NAME
+        terraform apply -var compute_zone=YOUR_REGION -var cluster_name=YOUR_CLUSTER_NAME
         ```
 1. Return to the repository root directory
     ```bash
@@ -301,11 +305,15 @@ The `certbot.email` should be configured if you are using the Certbot option for
 
 ### Resource requests
 
-For portability to low-resource environments like minikube, resource requests are zeroed for all components.  This is just the default configuration.  For production environments, set resource requests equal to approximately one-half of the resource limits.
+For portability to low-resource environments like minikube, resource requests are zeroed for all components.  This is just the default configuration.
 
 ### GPU capabilities
 
 If you provisioned the cluster using the [gke-with-gpu](provision/gke-with-gpu) specification, ensure `jupyter.enabled` is `true`, set `jupyter.gpu.enabled` to `true`, and uncomment the two `nvidia.com/gpu: 1` resource specification lines.
+
+### VM types
+
+For GKE installations using the [gke-beta provisioning specification](provision/gke-beta) (or similar), workloads can be configured to run on any combination of standard, spot, and/or preemptive VMs.  If multiple VM types are enabled, no scheduling preference will be given to any one option.  Any workload ran without node selectors or node affinities will be scheduled on standard VMs.
 
 ## Installation
 
@@ -369,6 +377,23 @@ Access the components that you've enabled in the Helm values (after authenticati
 * prometheus.YOUR_DOMAIN for Prometheus monitoring
 * grafana.YOUR_DOMAIN for Grafana visualization
 * keycloak.YOUR_DOMAIN for Keycloak administration
+
+## Deprovisioning
+
+### Helm uninstall
+
+Uninstall both helm charts with:
+```bash
+helm uninstall workstation --wait
+helm uninstall workstation-prerequisites --namespace kube-system --wait
+```
+
+### Terraform destroy
+
+If a Terraform [provisioning specification](provision/) was used to create the cloud resources, navigate to the provisioning directory and delete with:
+```bash
+terraform destroy
+```
 
 ## Contributing
 

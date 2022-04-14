@@ -48,6 +48,8 @@ spec:
         app: code
     spec:
       {{ toYaml .Values.podDefaults | nindent 6 }}
+      {{ include "affinity" .Values.code | indent 6 }}
+      {{ include "tolerations" .Values.code | indent 6 }}
       securityContext:
         fsGroup: 1000
       initContainers:
