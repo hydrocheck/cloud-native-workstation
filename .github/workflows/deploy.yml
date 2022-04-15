@@ -24,6 +24,10 @@ jobs:
         gcloud container clusters get-credentials core-qa --zone us-central1-a
         alias helm="docker run -ti --rm -v $(pwd):/apps -v ~/.kube:/root/.kube -v ~/.helm:/root/.helm alpine/helm:3.5.4"
 
+    - name: Generate a password
+      run: |
+        echo "PASSWORD=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c10)" >> $GITHUB_ENV
+
     - name: Setup namespace
       run: |
         kubectl create namespace workstation-$GITHUB_RUN_NUMBER
@@ -47,7 +51,7 @@ jobs:
             --namespace workstation-$GITHUB_RUN_NUMBER \
             --set domain=$GITHUB_RUN_NUMBER.${{ secrets.ROOT_URL }} \
             --set policies.enabled=false \
-            --set authentication.password=${{ secrets.PASSWORD }} \
+            --set authentication.password=$PASSWORD \
             --set certbot.enabled=true \
             --set certbot.email=admin@$GITHUB_RUN_NUMBER.${{ secrets.ROOT_URL }} \
             --set oauth2Proxy.enabled=true \
@@ -76,7 +80,7 @@ jobs:
 
     - name: Create access instructions and helm release status
       run: |
-        echo "You can access your instance at code.$GITHUB_RUN_NUMBER.${{ secrets.ROOT_URL }}, using the username \"workstation\" and password \"${{ secrets.PASSWORD }}\"" > access.txt
+        echo "You can access your instance at code.$GITHUB_RUN_NUMBER.${{ secrets.ROOT_URL }}, using the username \"workstation\" and password \"$PASSWORD\"" > access.txt
         helm status workstation --namespace workstation-$GITHUB_RUN_NUMBER > status.txt
 
     - uses: actions/upload-artifact@v3
