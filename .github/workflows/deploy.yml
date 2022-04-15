@@ -68,7 +68,7 @@ jobs:
             --set kanboard.enabled=false \
             --set prometheus.enabled=false \
             --set grafana.enabled=false \
-            --timeout 3m0s \
+            --timeout 5m0s \
             --wait || echo $?
 
     - name: Create DNS records
