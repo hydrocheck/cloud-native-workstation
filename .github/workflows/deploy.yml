@@ -80,7 +80,7 @@ jobs:
 
     - name: Create access instructions and helm release status
       run: |
-        echo "You can access your instance at code.$GITHUB_RUN_NUMBER.${{ secrets.ROOT_URL }}, using the username \"workstation\" and password \"$PASSWORD\"" > access.txt
+        echo "You can access your instance at code.$GITHUB_RUN_NUMBER.${{ secrets.ROOT_URL }}, using the username \"workstation\" and password \"$PASSWORD\", in about 5 minutes" > access.txt
         helm status workstation --namespace workstation-$GITHUB_RUN_NUMBER > status.txt
 
     - uses: actions/upload-artifact@v3
