@@ -73,3 +73,18 @@ jobs:
         gcloud dns --project=${{ secrets.GCP_PROJECT_ID }} record-sets transaction start --zone=${{ secrets.DNS_ZONE }}
         gcloud dns --project=${{ secrets.GCP_PROJECT_ID }} record-sets transaction add $IP --name="*.$GITHUB_RUN_NUMBER.${{ secrets.ROOT_URL }}" --ttl=300 --type=A --zone=${{ secrets.DNS_ZONE }}
         gcloud dns --project=${{ secrets.GCP_PROJECT_ID }} record-sets transaction execute --zone=${{ secrets.DNS_ZONE }}
+
+    - name: Create access instructions and helm release status
+      run: |
+        echo "You can access your instance at code.$GITHUB_RUN_NUMBER.${{ secrets.ROOT_URL }}, using the username \"workstation\" and password \"${{ secrets.PASSWORD }}\"" > access.txt
+        helm status workstation --namespace workstation-$GITHUB_RUN_NUMBER > status.txt
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: access
+        path: access.txt
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: status
+        path: status.txt
